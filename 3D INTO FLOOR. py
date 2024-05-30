@@ -1,0 +1,35 @@
+import cv2
+import numpy as np
+
+def convert_to_floor_plan(image_path):
+    img = cv2.imread(image_path)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    
+    _, thresh = cv2.threshold(gray, 240, 255, cv2.THRESH_BINARY)
+    
+    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    
+    contour_img = np.zeros_like(img)
+    cv2.drawContours(contour_img, contours, -1, (255, 255, 255), thickness=cv2.FILLED)
+    
+    contour_gray = cv2.cvtColor(contour_img, cv2.COLOR_BGR2GRAY)
+    
+    
+    inverted_contour = cv2.bitwise_not(contour_gray)
+    
+    
+    edges = cv2.Canny(inverted_contour, 30, 100)
+    
+    
+    lines = cv2.HoughLinesP(edges, 1, np.pi/180, threshold=100, minLineLength=100, maxLineGap=10)
+    
+    floor_plan = np.copy(img)
+    for line in lines:
+        x1, y1, x2, y2 = line[0]
+        cv2.line(floor_plan, (x1, y1), (x2, y2), (0, 255, 0), 2)
+    
+    return floor_plan
+
+
+    
